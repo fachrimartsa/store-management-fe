@@ -19,6 +19,9 @@ import DetailKategori from "./component/pages/master-kategori/Detail.jsx";
 import UpdateKategori from "./component/pages/master-kategori/Update.jsx";
 import CreateJenisServis from "./component/pages/master-jenis-servis/Create.jsx";
 import UpdateJenisServis from "./component/pages/master-jenis-servis/Update.jsx";
+import TransaksiServis from "./component/pages/transaksi-servis/Index.jsx";
+import CreateTransaksiServis from "./component/pages/transaksi-servis/Create.jsx";
+import DetailTransaksiServis from "./component/pages/transaksi-servis/Detail.jsx";
 
 function App() {
   return (
@@ -54,6 +57,9 @@ function App() {
           <Route path="dataMobil/create" element={<CreateMobil />} />
           <Route path="dataMobil/update" element={<UpdateMobil />} />
 
+          <Route path="transaksiServis" element={<TransaksiServis />} />
+          <Route path="transaksiServis/create" element={<CreateTransaksiServis />} />
+          <Route path="transaksiServis/detail" element={<DetailTransaksiServis />} />
         </Route>
       </Routes>
     </Router>

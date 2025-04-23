@@ -1,4 +1,4 @@
-import DropDown from "../../part/DropDown"; // Impor dropdown yang sudah kamu buat
+import DropDown from "../../part/Dropdown.jsx"; // Impor dropdown yang sudah kamu buat
 import React, { useState } from "react";
 import Input from "../../part/Input"; 
 import  UseFetch  from "../../util/UseFetch";

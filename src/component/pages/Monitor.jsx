@@ -5,11 +5,19 @@ import mjl from "../../assets/mjl.jfif"
 
 export default function Monitor() {
   const data = [
-    { no: 1, mobil: "Toyota Avanza", mekanik: "Ujang Surijang", estimasiWaktu: "2 Jam", waktuBerjalan: "1 Jam 30 Menit", status: "Selesai" },
-    { no: 2, mobil: "Honda Civic", mekanik: "Tatang Kutang", estimasiWaktu: "1 Jam 30 Menit", waktuBerjalan: "1 Jam 15 Menit", status: "Selesai" },
-    { no: 3, mobil: "Suzuki Swift", mekanik: "Andi Pratama", estimasiWaktu: "1 Jam", waktuBerjalan: "45 Menit", status: "Dalam Proses" },
-    { no: 4, mobil: "Nissan X-Trail", mekanik: "Budi Santoso", estimasiWaktu: "3 Jam", waktuBerjalan: "2 Jam 45 Menit", status: "Dalam Proses" }
-  ];  
+    {
+      Key: null,
+      No: null,
+      Nama: null,
+      Mobil: null,
+      "No Plat": null,
+      Mekanik: null,
+      "Estimasi Waktu": null,
+      "Waktu Aktual": null,
+      Status: null
+    },
+  ];
+   
 
   const navigate = useNavigate();
 

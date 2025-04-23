@@ -70,7 +70,7 @@ export default function Sidebar() {
 
         <li>
           <Link
-            to="/dataMobil"
+            to="/transaksiServis"
             className="flex items-center text-lg font-medium text-white hover:text-blue-300 transition duration-200 ease-in-out"
           >
             <i className="fas fa-screwdriver-wrench mr-5 text-2xl"></i>
