@@ -13,7 +13,6 @@ export default function CreateTransaksiServis() {
     namaPemilik: "",
     platMobil: "",
     jenisBarang: "",
-    totalHarga: "",
   });
 
   const [error, setError] = useState("");
@@ -117,16 +116,52 @@ export default function CreateTransaksiServis() {
 
     if (!formData.namaPemilik) return setError("Nama pemilik wajib diisi");
     if (listServis.length === 0 && listBarang.length === 0) return setError("Minimal tambah 1 servis atau barang");
+      
+    const formDataToSubmit = {
+      idMobil: selectedMobil.value,
+      idMekanik: selectedMekanik.value,
+      namaPemilik: formData.namaPemilik,
+      platMobil: formData.platMobil,
+      total: totalHarga
+    };
+  
+    console.log(formDataToSubmit);
+    console.log(listBarang.Key);
+    console.log(listServis.Key);
+    const data = await UseFetch(
+      API_LINK + "TransaksiServis/createTransaksiServis.php",
+      formDataToSubmit,
+      "POST"
+    );
 
-    // Simulasi proses simpan...
-    swal({
-      title: "Berhasil!",
-      text: "Data berhasil disimpan",
-      icon: "success",
-      button: "OK",
-    }).then(() => {
-      navigate("/transaksiServis");
-    });
+    for (const item of listServis) {
+      const detailServis = await UseFetch(
+        API_LINK + "TransaksiServis/createDetailServis.php",
+        {
+          idTransaksi: data.srv_id,    // Asumsinya ini ID transaksi
+          idServis: item.Key     // srv_id tetap dari luar
+        },
+        "POST"
+      );    
+    }
+
+    for (const item of listBarang) {
+      const detailBarang = await UseFetch(
+        API_LINK + "TransaksiServis/createDetailBarang.php",
+        {
+          idTransaksi: data.srv_id,    // Asumsinya ini ID transaksi
+          idBarang: item.Key     // srv_id tetap dari luar
+        },
+        "POST"
+      );    
+    }
+    
+    if (data === "ERROR") {
+      swal("Oops!", "Terjadi kesalahan saat menambahkan barang.", "error");
+    } else {
+      swal("Sukses!", "Barang berhasil ditambahkan!", "success");
+      navigate("/transaksiServis");  // Ganti ke halaman yang sesuai
+    }
   };
 
   return (
