@@ -124,10 +124,7 @@ export default function CreateTransaksiServis() {
       platMobil: formData.platMobil,
       total: totalHarga
     };
-  
-    console.log(formDataToSubmit);
-    console.log(listBarang.Key);
-    console.log(listServis.Key);
+
     const data = await UseFetch(
       API_LINK + "TransaksiServis/createTransaksiServis.php",
       formDataToSubmit,
@@ -160,7 +157,10 @@ export default function CreateTransaksiServis() {
       swal("Oops!", "Terjadi kesalahan saat menambahkan barang.", "error");
     } else {
       swal("Sukses!", "Barang berhasil ditambahkan!", "success");
-      navigate("/transaksiServis");  // Ganti ke halaman yang sesuai
+      document.getElementById("cancelButton").style.display = "none";
+      document.getElementById("saveButton").style.display = "none";
+      document.getElementById("printButton").classList.remove("hidden");
+      document.getElementById("backButton").classList.remove("hidden");
     }
   };
 
@@ -322,10 +322,16 @@ export default function CreateTransaksiServis() {
 
         {/* === Tombol Aksi === */}
         <div className="text-center mt-6 space-x-4">
-          <button type="button" onClick={handleCancel} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg">
+          <button id="printButton" type="button" className="bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-lg hidden">
+            Print
+          </button>
+          <button id="backButton" type="button" onClick={handleCancel} className="bg-blue-500 hover:bg-blue-700 text-white px-6 py-2 rounded-lg hidden">
+            Kembali
+          </button>
+          <button id="cancelButton" type="button" onClick={handleCancel} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg">
             Batal
           </button>
-          <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg">
+          <button id="saveButton" type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg">
             Simpan
           </button>
         </div>

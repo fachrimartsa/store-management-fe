@@ -1,178 +1,143 @@
-import React, { useState, useRef } from "react";
-import Autocomplete from "../../part/Autocomplete";
+import { useEffect, useState } from "react";
 import Table from "../../part/Table";
 import { API_LINK } from "../../util/Constants";
 import UseFetch from "../../util/UseFetch";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const inisialisasiMobil = [
+const inisialisasiBarang = [
   {
     Key: null,
     No: null,
     Nama: null,
-    Status: null,
-    Aksi: null,
+    "Jenis Barang": null,
+    Harga: null,
+  },
+];
+
+const inisialisasiServis = [
+  {
+    Key: null,
+    No: null,
+    Nama: null,
+    Harga: null,
   },
 ];
 
 export default function DetailTransaksiServis() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { transaksiId } = location.state || {}; 
   const [formData, setFormData] = useState({
-    nama: "",
+    id: "",
+    namaMekanik: "",
+    namaPemilik: "",
+    mobil: "",
+    platMobil: "",
+    tanggal: "",
   });
   const [error, setError] = useState("");
-  const [mobilList, setMobilList] = useState(inisialisasiMobil);
-  const [selectedMobil, setSelectedMobil] = useState(null);
-  const autocompleteRef = useRef(null);
+  const [totalHarga, setTotalHarga] = useState(0);
+  const [barangList, setBarangList] = useState(inisialisasiBarang);
+  const [servisList, setServisList] = useState(inisialisasiServis);
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(true);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleCancel = () => {
     navigate("/transaksiServis");
   }
 
-  const handleAddMobil = () => {
-    if (!selectedMobil) {
-      setError("Nama mobil harus dipilih");
-      return;
-    }
-
-    if(mobilList == inisialisasiMobil) {
-      mobilList.length = 0;
-    }
-
-    const isMobilExists = mobilList.some((mobil) => mobil.Key === selectedMobil.value);
-
-    if (isMobilExists) {
-      setError("Mobil ini sudah ada dalam daftar");
-      return;
-    }
-
-    const newMobil = {
-      Key: selectedMobil.value,
-      No: mobilList.length + 1,
-      Nama: selectedMobil.label,
-      Status: "Aktif",        
-      Aksi: ["Delete"]          
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsError(false);
+      try {
+        const data = await UseFetch(API_LINK + "TransaksiServis/getTransaksiById.php", { id: transaksiId }, "POST");
+        if (data && data.message && data.message === "Tidak ada kategori ditemukan") {
+          setIsError(true);
+        } else {
+          setFormData({
+            id: data.Key || "",
+            namaPemilik: data["Nama Pemilik"] || "",
+            namaMekanik: data["Nama Mekanik"] || "",
+            mobil: data["Nama Mobil"] || "",
+            platMobil: data["Plat Mobil"] || "",
+            tanggal: data["Tanggal Transaksi"] || "",
+          });
+          setTotalHarga(data["Total Biaya"]);
+        }
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setMobilList([...mobilList, newMobil]);
-    setSelectedMobil(null); 
-    autocompleteRef.current?.resetInput(); 
-    setError(""); 
-  };
-
-  const handleDeleteMobil = (id) => {
-    setMobilList(mobilList.filter((mobil) => mobil.Key !== id));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(""); // Reset error sebelum validasi baru
-  
-    if (!formData.nama) {
-      setError("Nama kategori tidak boleh kosong");
-      return;
-    }
-  
-    if (mobilList.length < 1) {
-      setError("Mobil tidak boleh kurang dari 1");
-      return;
-    }
-  
-    try {
-      // Kirim request untuk membuat kategori dan mendapatkan ID Kategori
-      const kategoriResponse = await UseFetch(
-        API_LINK + "MasterKategori/createKategori.php",
-        formData,
-        "POST"
-      );
- 
-      if (!kategoriResponse.ktg_id) {
-        setError("Gagal mendapatkan ID Kategori");
-        return;
+    const fetchDetailBarang = async () => {
+      setIsError(false);
+      try {
+        const data = await UseFetch(API_LINK + "TransaksiServis/getBarangByIdTransaksi.php", { id: transaksiId }, "POST");
+        if (data && data.message && data.message === "Tidak ada kategori ditemukan") {
+          setIsError(true);
+        } else {
+          setBarangList(data);
+        }
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
       }
-  
-      const idKategori = kategoriResponse.ktg_id;
-  
-      // Loop melalui mobilList untuk membuat detail kategori
-      for (const mobil of mobilList) {
-        await UseFetch(
-          API_LINK + "MasterKategori/createDetail.php",
-          {
-            idKategori: idKategori,
-            idMobil: mobil.Key, 
-          },
-          "POST"
-        );
+    };
+
+     const fetchDetailServis = async () => {
+      setIsError(false);
+      try {
+        const data = await UseFetch(API_LINK + "TransaksiServis/getServisByIdTransaksi.php", { id: transaksiId }, "POST");
+        if (data && data.message && data.message === "Tidak ada kategori ditemukan") {
+          setIsError(true);
+        } else {
+          setServisList(data);
+        }
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
       }
-  
-      // Menampilkan SweetAlert setelah sukses
-      swal({
-        title: "Berhasil!",
-        text: "Kategori dan mobil berhasil ditambahkan!",
-        icon: "success",
-        button: "OK",
-      }).then(() => {
-        navigate("/dataKategori"); // Redirect setelah klik OK
-      });
-  
-    } catch (error) {
-      swal({
-        title: "Gagal!",
-        text: "Terjadi kesalahan saat menyimpan data",
-        icon: "error",
-        button: "Coba Lagi",
-      });
-    }
-  };
-  
+    };
+
+    fetchData();
+    fetchDetailBarang();
+    fetchDetailServis();
+  }, [transaksiId]);
+
 
   return (
     <div className="max-w-4xl mx-auto bg-blue-800 p-8 rounded-lg shadow-lg mt-5">
       <h2 className="text-3xl font-semibold mb-6 text-white text-center">
-        Tambah Transaksi
+        Detail Transaksi
       </h2>
 
       {error && <div className="text-red-500 mb-4">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
+      <form>
         <div className="mb-4">
           <label className="block text-white mb-2">Nama Pemilik Mobil</label>
           <input
             type="text"
             name="nama"
             placeholder="Masukkan Nama"
-            value={formData.nama}
-            onChange={handleChange}
+            value={formData.namaPemilik}
             className="w-full p-2 border border-gray-300 rounded-lg"
           />
         </div>
 
         <div className="mb-4">
             <label className="block text-white mb-2">Mobil</label>
-            <Autocomplete
-              ref={autocompleteRef}
-              placeholder="Cari Mobil..."
-              fetchData={async (query) => {
-                const data = await UseFetch(API_LINK + "MasterMobil/readMobil.php", {}, "GET");
-
-                const filtered = data.filter((item) =>
-                  item.Nama.toLowerCase().includes(query.toLowerCase()) 
-                );
-
-                return filtered.map(item => ({
-                  label: item.Nama,
-                  value: item.Key   
-                }));
-              }}
-              onSelect={(item) => {
-                setSelectedMobil(item);  
-              }}
-              renderLabel={(item) => item.label}
+            <input
+            type="text"
+            name="mobil"
+            placeholder="Masukkan Mobil"
+            value={formData.mobil}
+            className="w-full p-2 border border-gray-300 rounded-lg"
             />
         </div>
 
@@ -180,132 +145,66 @@ export default function DetailTransaksiServis() {
           <label className="block text-white mb-2">Plat Mobil</label>
           <input
             type="text"
-            name="nama"
+            name="platMobil"
             placeholder="Masukkan Plat Mobil"
-            value={formData.nama}
-            onChange={handleChange}
+            value={formData.platMobil}
             className="w-full p-2 border border-gray-300 rounded-lg"
           />
         </div>
 
         <div className="mb-4">
             <label className="block text-white mb-2">Mekanik</label>
-            <Autocomplete
-              ref={autocompleteRef}
-              placeholder="Cari Mekanik..."
-              fetchData={async (query) => {
-                const data = await UseFetch(API_LINK + "MasterMobil/readMobil.php", {}, "GET");
-
-                const filtered = data.filter((item) =>
-                  item.Nama.toLowerCase().includes(query.toLowerCase()) 
-                );
-
-                return filtered.map(item => ({
-                  label: item.Nama,
-                  value: item.Key   
-                }));
-              }}
-              onSelect={(item) => {
-                setSelectedMobil(item);  
-              }}
-              renderLabel={(item) => item.label}
+            <input
+            type="text"
+            name="mekanik"
+            placeholder="Masukkan Mekanik"
+            value={formData.namaMekanik}
+            className="w-full p-2 border border-gray-300 rounded-lg"
             />
         </div>
 
-
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <label className="block text-white mb-2">Jenis Servis</label>
-            <Autocomplete
-              ref={autocompleteRef}
-              placeholder="Cari Jenis Servis..."
-              fetchData={async (query) => {
-                const data = await UseFetch(API_LINK + "MasterMobil/readMobil.php", {}, "GET");
-
-                const filtered = data.filter((item) =>
-                  item.Nama.toLowerCase().includes(query.toLowerCase()) 
-                );
-
-                return filtered.map(item => ({
-                  label: item.Nama,
-                  value: item.Key   
-                }));
-              }}
-              onSelect={(item) => {
-                setSelectedMobil(item);  
-              }}
-              renderLabel={(item) => item.label}
+        <div className="mb-4">
+            <label className="block text-white mb-2">Tanggal Transaksi</label>
+            <input
+            type="text"
+            name="tanggal"
+            placeholder="Masukkan Tanggal"
+            value={formData.tanggal}
+            className="w-full p-2 border border-gray-300 rounded-lg"
             />
-          </div>
-          <button
-            type="button"
-            onClick={handleAddMobil}
-            className="bg-green-600 hover:bg-green-500 text-white py-2 px-4 mt-8 rounded-lg text-lg"
-          >
-            Add
-          </button>
         </div>
 
         <div className="mt-6 mb-4">
+          <label className="block text-white mb-2">Jenis Servis</label>
           <Table
-            data={mobilList} 
-            onDelete={handleDeleteMobil}
+            data={servisList} 
           />
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <label className="block text-white mb-2">Barang</label>
-            <Autocomplete
-              ref={autocompleteRef}
-              placeholder="Cari Barang..."
-              fetchData={async (query) => {
-                const data = await UseFetch(API_LINK + "MasterMobil/readMobil.php", {}, "GET");
-
-                const filtered = data.filter((item) =>
-                  item.Nama.toLowerCase().includes(query.toLowerCase()) 
-                );
-
-                return filtered.map(item => ({
-                  label: item.Nama,
-                  value: item.Key   
-                }));
-              }}
-              onSelect={(item) => {
-                setSelectedMobil(item);  
-              }}
-              renderLabel={(item) => item.label}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleAddMobil}
-            className="bg-green-600 hover:bg-green-500 text-white py-2 px-4 mt-8 rounded-lg text-lg"
-          >
-            Add
-          </button>
+        <div className="mt-6">
+          <label className="block text-white mb-2">Barang</label>
+          <Table
+            data={barangList} 
+          />
         </div>
 
-        <div className="mt-6">
-          <Table
-            data={mobilList} 
-            onDelete={handleDeleteMobil}
+        <div className="mt-4">
+          <label className="block text-white mb-2">Total Harga</label>
+          <input
+            type="text"
+            value={`Rp ${totalHarga.toLocaleString("id-ID")}`}
+            readOnly
+            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 font-semibold"
           />
         </div>
 
         <div className="text-center space-x-5 mt-5">
           <button
             type="button"
-            className="bg-red-600 hover:bg-red-500 text-white py-2 px-6 rounded-lg text-lg"
+            className="bg-green-600 hover:bg-green-500 text-white py-2 px-6 rounded-lg text-lg"
             onClick={handleCancel}
           >
-            Batal
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-6 rounded-lg text-lg"
-          >
-            Simpan
+            Kembali
           </button>
         </div>
       </form>
