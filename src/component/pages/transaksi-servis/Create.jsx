@@ -21,13 +21,13 @@ export default function CreateTransaksiServis() {
   const [totalHarga, setTotalHarga] = useState(0);
 
   const [selectedMekanik, setSelectedMekanik] = useState(null);
-  const [selectedJenis, setSelectedJenis] = useState(null);
 
   const [selectedMobil, setSelectedMobil] = useState(null); // ini buat Mobil
   const idMobil = selectedMobil?.value || null;
 
   const [selectedServis, setSelectedServis] = useState(null);
   const [selectedBarang, setSelectedBarang] = useState(null);
+  const [jumlahBarang, setJumlahBarang] = useState(0);
 
   const refServis = useRef(null);
   const refBarang = useRef(null);
@@ -76,26 +76,22 @@ export default function CreateTransaksiServis() {
   };
 
   const handleAddBarang = () => {
-    if (!selectedBarang) return setError("Pilih barang dulu");
-
-    if (listBarang.some(item => item.Key === selectedBarang.value)) {
-      return setError("Barang sudah ditambahkan");
-    }
+    if (!selectedBarang) return;
 
     const newItem = {
       Key: selectedBarang.value,
       No: listBarang.length + 1,
       Nama: selectedBarang.label,
-      Harga: selectedBarang.harga || 0,
-      Aksi: ["Delete"],
+      Harga: selectedBarang.harga,
+      Jumlah: jumlahBarang,
+      Subtotal: selectedBarang.harga * jumlahBarang
     };
 
-    const newList = [...listBarang, newItem];
-    setListBarang(newList);
-    hitungTotal(listServis, newList);
-    setSelectedBarang(null);
-    refBarang.current?.resetInput();
-    setError("");
+    const updatedList = [...listBarang, newItem];
+    setListBarang(updatedList);
+
+    const total = updatedList.reduce((sum, item) => sum + item.Subtotal, 0);
+    setTotalHarga(total);
   };
 
   const handleDeleteServis = (id) => {
@@ -147,7 +143,8 @@ export default function CreateTransaksiServis() {
         API_LINK + "TransaksiServis/createDetailBarang.php",
         {
           idTransaksi: data.srv_id,    // Asumsinya ini ID transaksi
-          idBarang: item.Key     // srv_id tetap dari luar
+          idBarang: item.Key,
+          jumlah: jumlahBarang     
         },
         "POST"
       );    
@@ -238,18 +235,19 @@ export default function CreateTransaksiServis() {
             <Autocomplete
               ref={refServis}
               placeholder="Cari Jenis Servis..."
-              fetchData={async (q) => {
+              fetchData={async (query) => {
                 const data = await UseFetch(API_LINK + "MasterJenisServis/getJnsServisByMobil.php", {
                   id: idMobil
                 }, "POST");
-                return data.map(item => ({
-                  text: item.text,
+                return data.filter((item) => item.text.toLowerCase().includes(query.toLowerCase())
+                ).map(item => ({
+                  label: item.text,
                   value: item.value,
                   harga: item.harga
                 }));
               }}
               onSelect={(item) => setSelectedServis(item)}
-              renderLabel={(item) => item.text}
+              renderLabel={(item) => item.label}
             />
           </div>
           <button type="button" onClick={handleAddServis} className="bg-green-600 text-white px-4 py-2 mt-6 rounded-lg">
@@ -280,17 +278,19 @@ export default function CreateTransaksiServis() {
         </div>
 
         {/* === Input Barang === */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-end gap-4 mb-4">
+          {/* Autocomplete Barang */}
           <div className="flex-1">
             <label className="text-white mb-1 block">Barang</label>
             <Autocomplete
               ref={refBarang}
               placeholder="Cari Barang..."
-              fetchData={async (q) => {
+              fetchData={async (query) => {
                 const data = await UseFetch(API_LINK + "MasterBarang/getBarangByJenis.php", {
                   jenis: formData.jenisBarang
                 }, "POST");
-                return data.map(item => ({
+                return data.filter((item) => item.Nama.toLowerCase().includes(query.toLowerCase())
+                ).map(item => ({
                   label: item.Nama,
                   value: item.Key,
                   harga: item.Harga
@@ -300,11 +300,30 @@ export default function CreateTransaksiServis() {
               renderLabel={(item) => item.label}
             />
           </div>
-          <button type="button" onClick={handleAddBarang} className="bg-green-600 text-white px-4 py-2 mt-6 rounded-lg">
-            Tambah Barang
-          </button>
-        </div>
 
+          {/* Jumlah Barang */}
+          <div className="w-32">
+            <label className="text-white mb-1 block">Jumlah</label>
+            <input
+              type="number"
+              min="0"
+              value={jumlahBarang}
+              onChange={(e) => setJumlahBarang(parseInt(e.target.value) || 1)}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          {/* Tombol Tambah */}
+          <div>
+            <button
+              type="button"
+              onClick={handleAddBarang}
+              className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg"
+            >
+              Tambah Barang
+            </button>
+          </div>
+        </div>
         {/* === Tabel Barang === */}
         <h3 className="text-white font-bold mb-2">Daftar Barang</h3>
         <Table data={listBarang} onDelete={handleDeleteBarang} />
@@ -322,9 +341,6 @@ export default function CreateTransaksiServis() {
 
         {/* === Tombol Aksi === */}
         <div className="text-center mt-6 space-x-4">
-          <button id="printButton" type="button" className="bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-lg hidden">
-            Print
-          </button>
           <button id="backButton" type="button" onClick={handleCancel} className="bg-blue-500 hover:bg-blue-700 text-white px-6 py-2 rounded-lg hidden">
             Kembali
           </button>
