@@ -3,7 +3,7 @@ name: Deploy Vite to GitHub Pages
 on:
   push:
     branches:
-      - main  # trigger deploy tiap push ke main
+      - main
 
 jobs:
   build-and-deploy:
@@ -24,13 +24,14 @@ jobs:
       - name: Build project
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }} 
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: Copy index.html to 404.html (SPA routing fix)
+      - name: Fix SPA routing by copying index.html to 404.html
         run: cp -f dist/index.html dist/404.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.PAT_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          force_orphan: true
