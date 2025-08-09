@@ -8,12 +8,9 @@ const inisialisasiData = [
   {
     Key: null,
     No: null,
-    "Nama Barang": null,
-    "Kategori": null,
-    "Harga Beli": null,
-    "Harga Jual": null,
-    Stok: null,
-    Status: null,
+    "Nama Supplier": null,
+    Alamat: null,
+    "No Telepon": null,
     Aksi: [null],
   },
 ];
@@ -24,22 +21,14 @@ export default function IndexPage() {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const formatRupiah = (number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(number);
-  };
-
   const handleClick = () => {
-    navigate("/data-barang/create");
+    navigate("/data-supplier/create");
   };
 
-  const handleDelete = async (barangId) => {
+  const handleDelete = async (supplierId) => {
     const result = await SweetAlert(
       "Apakah Anda yakin?",
-      "Barang ini akan dihapus secara permanen!",
+      "Supplier ini akan dihapus secara permanen!",
       "warning",
       "Hapus"
     );
@@ -51,16 +40,16 @@ export default function IndexPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
-              mutation deleteBarang($brg_id: ID!) {
-                deleteBarang(brg_id: $brg_id)
+              mutation deleteSupplier($sp_id: ID!) {
+                deleteSupplier(sp_id: $sp_id)
               }
             `,
-            variables: { brg_id: barangId },
+            variables: { sp_id: supplierId },
           }),
         });
 
         const resultJson = await response.json();
-        if (resultJson.data?.deleteBarang) {
+        if (resultJson.data?.deleteSupplier) {
           SweetAlert("Sukses", "Data berhasil dihapus", "success");
           fetchData();
         } else {
@@ -72,8 +61,8 @@ export default function IndexPage() {
     }
   };
 
-  const handleUpdate = (barangId) => {
-    navigate(`/data-barang/update`, { state: { id: barangId } });
+   const handleUpdate = (supplierId) => {
+    navigate(`/data-supplier/update`, { state: { id: supplierId } });
   };
 
   const fetchData = async () => {
@@ -85,14 +74,12 @@ export default function IndexPage() {
         body: JSON.stringify({
           query: `
             query {
-              getAllBarang {
-                brg_id,
-                brg_nama,
-                brg_kategori,
-                brg_harga_beli,
-                brg_harga_jual,
-                brg_stok,
-                brg_status
+              getAllSuppliers {
+                sp_id,
+                sp_nama,
+                sp_contact,
+                sp_kategori,
+                sp_alamat
               }
             }
           `,
@@ -100,21 +87,19 @@ export default function IndexPage() {
       });
 
       const resultJson = await response.json();
-      const data = resultJson.data?.getAllBarang;
+      const data = resultJson.data?.getAllSuppliers;
       if (!data || data.length === 0) {
         setCurrentData(inisialisasiData);
       } else {
         const formattedData = data.map((value, index) => ({
-          Key: value.brg_id,
+          Key: value.sp_id,
           No: index + 1,
-          "Nama Barang": value.brg_nama,
-          "Kategori": value.brg_kategori,
-          "Harga Beli": formatRupiah(value.brg_harga_beli),
-          "Harga Jual": formatRupiah(value.brg_harga_jual),
-          Stok: value.brg_stok,
-          Status: value.brg_status,
+          "Nama Supplier": value.sp_nama,
+          "Kontak": value.sp_contact,
+          "Kategori": value.sp_kategori,
+          Alamat: value.sp_alamat,
           Aksi: ["Edit", "Delete"],
-          Alignment: ["center", "center", "center", "center", "center", "center", "center"],
+          Alignment: ["center", "center", "center", "center", "center", "center"],
         }));
         setCurrentData(formattedData);
       }
@@ -141,12 +126,12 @@ export default function IndexPage() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-semibold text-blue-900">Data Barang</h1>
+        <h1 className="text-3xl font-semibold text-blue-900">Data Supplier</h1>
         <button
           onClick={handleClick}
           className="bg-purple-700 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
         >
-          Tambah Barang
+          Tambah Supplier
         </button>
       </div>
       <Table data={currentData} onDelete={(id) => handleDelete(id)} onEdit={(id) => handleUpdate(id)} />

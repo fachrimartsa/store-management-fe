@@ -15,13 +15,13 @@ export default function Login() {
         title: "Login Berhasil!",
         text: "Mengalihkan ke dashboard...",
         icon: "success",
-        timer: 1000,
+        timer: 1500,
         buttons: false
       });
 
       setTimeout(() => {
         navigate("/dashboard");
-      }, 2000);
+      }, 1500);
     } else {
       swal({
         title: "Login Gagal",
@@ -33,39 +33,39 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-blue-900">
-      <div className="w-full max-w-md p-10 bg-white rounded-lg shadow-lg">
-        <h2 className="text-4xl font-semibold text-center text-blue-900 mb-8">Login</h2>
+    <div className="flex justify-center items-center min-h-screen bg-gray-900">
+      <div className="w-full max-w-md p-10 bg-white rounded-lg shadow-xl">
+        <h2 className="text-4xl font-bold text-center text-purple-800 mb-8">Login</h2>
         <form onSubmit={handleLogin}>
           <div className="mb-6">
-            <label htmlFor="username" className="block text-lg font-medium text-blue-800 mb-2">Username</label>
+            <label htmlFor="username" className="block text-lg font-medium text-gray-700 mb-2">Username</label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-4 rounded-lg border border-blue-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your username"
+              className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Masukkan username Anda"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label htmlFor="password" className="block text-lg font-medium text-blue-800 mb-2">Password</label>
+            <label htmlFor="password" className="block text-lg font-medium text-gray-700 mb-2">Password</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 rounded-lg border border-blue-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
+              className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Masukkan password Anda"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 transition duration-300"
+            className="w-full py-3 bg-purple-700 text-white font-semibold rounded-md shadow-md hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
           >
             Login
           </button>

@@ -1,145 +1,248 @@
-import DropDown from "../../part/Dropdown.jsx"; // Impor dropdown yang sudah kamu buat
 import React, { useState } from "react";
-import Input from "../../part/Input"; 
-import  UseFetch  from "../../util/UseFetch";
+import Input from "../../part/Input";
 import { API_LINK } from "../../util/Constants";
 import { useNavigate } from "react-router-dom";
+import SweetAlert from "../../util/SweetAlert";
 
-
-export default function CreateBarang() {
+export default function Create() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    namaBarang: "",
-    jenisBarang: "",
-    hargaBarang: "",
-    stokBarang: ""
+    brg_nama: "",
+    brg_kategori: "",
+    brg_harga_beli: "",
+    brg_harga_jual: "",
+    brg_stok: "",
+    brg_status: "Aktif",
   });
 
   const [error, setError] = useState("");
 
+  const formatRupiah = (number) => {
+    if (!number) return "";
+    const numStr = String(number).replace(/\D/g, '');
+    if (!numStr) return "";
+    return new Intl.NumberFormat('id-ID').format(Number(numStr));
+  };
+
+  const parseRupiah = (rupiahString) => {
+    return parseInt(String(rupiahString).replace(/[^0-9]/g, ''), 10) || 0;
+  };
+
   const handleChange = (e) => {
-    let { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
-    if (name === "hargaBarang") {
-      value = value.replace(/\D/g, ""); // Hanya angka
-      value = new Intl.NumberFormat("id-ID").format(value); // Format ribuan
+    if (name === "brg_harga_beli" || name === "brg_harga_jual") {
+      setFormData({
+        ...formData,
+        [name]: formatRupiah(value),
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? (checked ? "Aktif" : "Nonaktif") : value,
+      });
     }
-
-    setFormData({ ...formData, [name]: value });
   };
 
   const handleCancel = () => {
-    navigate("/dataBarang");
-  }
+    navigate("/data-barang");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Validasi input
-    if (!formData.namaBarang || !formData.jenisBarang || !formData.hargaBarang || !formData.stokBarang) {
-      setError("Semua kolom harus diisi.");
+
+    const hargaBeliParsed = parseRupiah(formData.brg_harga_beli);
+    const hargaJualParsed = parseRupiah(formData.brg_harga_jual);
+    const stokParsed = parseInt(formData.brg_stok, 10);
+
+    if (
+      !formData.brg_nama ||
+      !formData.brg_kategori ||
+      !formData.brg_harga_beli ||
+      !formData.brg_harga_jual ||
+      !formData.brg_stok ||
+      !formData.brg_status
+    ) {
+      setError("Semua field wajib diisi.");
       return;
     }
-  
+
+    if (isNaN(hargaBeliParsed) || isNaN(hargaJualParsed) || isNaN(stokParsed)) {
+      setError("Harga beli, harga jual, dan stok harus berupa angka.");
+      return;
+    }
+
     setError("");
-  
-    const harga = parseFloat(formData.hargaBarang.replace(/\D/g, ""));
-  
-    const stok = parseInt(formData.stokBarang, 10);
-  
-    const formDataToSubmit = {
-      nama: formData.namaBarang,
-      jenis: formData.jenisBarang,
-      harga: harga,
-      stok: stok
-    };
-  
-    const data = await UseFetch(
-      API_LINK + "MasterBarang/createBarang.php",
-      formDataToSubmit,
-      "POST"
-    );
-    console.log(data);
-  
-    if (data === "ERROR") {
-      swal("Oops!", "Terjadi kesalahan saat menambahkan barang.", "error");
-    } else {
-      swal("Sukses!", "Barang berhasil ditambahkan!", "success");
-      setFormData({
-        namaBarang: "",
-        jenisBarang: "",
-        hargaBarang: "",
-        stokBarang: ""
+
+    try {
+      const query = `
+        mutation createBarang(
+          $brg_nama: String!,
+          $brg_kategori: String!,
+          $brg_harga_beli: Float!,
+          $brg_harga_jual: Float!,
+          $brg_stok: Int!,
+          $brg_status: String!
+        ) {
+          createBarang(
+            brg_nama: $brg_nama,
+            brg_kategori: $brg_kategori,
+            brg_harga_beli: $brg_harga_beli,
+            brg_harga_jual: $brg_harga_jual,
+            brg_stok: $brg_stok,
+            brg_status: $brg_status
+          ) {
+            brg_id
+            brg_nama
+            brg_kategori
+            brg_harga_beli
+            brg_harga_jual
+            brg_stok
+            brg_status
+          }
+        }
+      `;
+
+      const variables = {
+        brg_nama: formData.brg_nama,
+        brg_kategori: formData.brg_kategori,
+        brg_harga_beli: hargaBeliParsed,
+        brg_harga_jual: hargaJualParsed,
+        brg_stok: stokParsed,
+        brg_status: formData.brg_status,
+      };
+
+      const response = await fetch(API_LINK, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
       });
-      navigate("/dataBarang");  // Ganti ke halaman yang sesuai
+
+      const result = await response.json();
+
+      if (result.errors) {
+        throw new Error(result.errors[0].message || "Terjadi kesalahan saat menambahkan barang.");
+      }
+
+      SweetAlert("Sukses!", "Barang berhasil ditambahkan!", "success");
+      setFormData({
+        brg_nama: "",
+        brg_kategori: "",
+        brg_harga_beli: "",
+        brg_harga_jual: "",
+        brg_stok: "",
+        brg_status: "Aktif",
+      });
+      navigate("/data-barang");
+    } catch (err) {
+      console.error("Error creating barang:", err);
+      SweetAlert("Oops!", err.message || "Terjadi kesalahan saat menambahkan barang.", "error");
     }
   };
-  
 
   return (
-    <div className="max-w-4xl mx-auto bg-blue-800 p-8 rounded-lg shadow-lg mt-20">
-      <h2 className="text-3xl font-semibold mb-6 text-white text-center">Tambah Data Barang</h2>
+    <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-lg shadow-xl mt-10">
+      <h2 className="text-3xl font-semibold mb-6 text-fuchsia-400 text-center">Tambah Data Barang</h2>
 
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
 
       <form onSubmit={handleSubmit}>
         <Input
           label="Nama Barang"
-          forInput="namaBarang"
+          forInput="brg_nama"
           type="text"
+          name="brg_nama"
           placeholder="Masukkan Nama Barang"
-          value={formData.namaBarang}
+          value={formData.brg_nama}
           onChange={handleChange}
           isRequired={true}
-          errorMessage={error && !formData.namaBarang ? "Nama Barang tidak boleh kosong" : ""}
-        />
-
-        <DropDown
-          label="Jenis Barang"
-          forInput="jenisBarang"
-          value={formData.jenisBarang}
-          onChange={handleChange}
-          isRequired={true}
-          arrData={[
-            { Value: "original", Text: "Original" },
-            { Value: "lokal", Text: "Lokal" },
-          ]}
-          errorMessage={error && !formData.jenisBarang ? "Jenis Barang harus dipilih" : ""}
+          errorMessage={error && !formData.brg_nama ? "Nama Barang tidak boleh kosong" : ""}
         />
 
         <Input
-          label="Harga Barang"
-          forInput="hargaBarang"
+          label="Kategori Barang"
+          forInput="brg_kategori"
           type="text"
-          placeholder="Masukkan Harga Barang"
-          value={formData.hargaBarang}
+          name="brg_kategori"
+          placeholder="Masukkan Kategori Barang"
+          value={formData.brg_kategori}
           onChange={handleChange}
           isRequired={true}
-          errorMessage={error && !formData.hargaBarang ? "Harga Barang tidak boleh kosong" : ""}
+          errorMessage={error && !formData.brg_kategori ? "Kategori tidak boleh kosong" : ""}
         />
 
         <Input
-          label="Stok Barang"
-          forInput="stokBarang"
-          type="number"
-          placeholder="Masukkan Stok Barang"
-          value={formData.stokBarang}
+          label="Harga Beli"
+          forInput="brg_harga_beli"
+          type="text"
+          name="brg_harga_beli"
+          placeholder="Masukkan Harga Beli"
+          value={formData.brg_harga_beli}
           onChange={handleChange}
           isRequired={true}
-          errorMessage={error && !formData.stokBarang ? "Harga Barang tidak boleh kosong" : ""}
+          errorMessage={error && !formData.brg_harga_beli ? "Harga Beli tidak boleh kosong" : ""}
         />
 
-        <div className="text-center mt-6">
-            <button
-              type="button"
-              className="bg-red-600 hover:bg-red-400 text-white py-2 px-6 rounded-lg text-lg mx-3"
-              onClick={handleCancel}
-            >
-              Batal
-            </button>
+        <Input
+          label="Harga Jual"
+          forInput="brg_harga_jual"
+          type="text"
+          name="brg_harga_jual"
+          placeholder="Masukkan Harga Jual"
+          value={formData.brg_harga_jual}
+          onChange={handleChange}
+          isRequired={true}
+          errorMessage={error && !formData.brg_harga_jual ? "Harga Jual tidak boleh kosong" : ""}
+        />
+
+        <Input
+          label="Stok"
+          forInput="brg_stok"
+          type="number"
+          name="brg_stok"
+          placeholder="Masukkan Jumlah Stok"
+          value={formData.brg_stok}
+          onChange={handleChange}
+          isRequired={true}
+          errorMessage={error && !formData.brg_stok ? "Stok tidak boleh kosong" : ""}
+        />
+
+        <div className="mb-4">
+          <label htmlFor="brg_status" className="block text-gray-300 text-sm font-bold mb-2">
+            Status Barang <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="brg_status"
+            name="brg_status"
+            value={formData.brg_status}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white"
+            required
+          >
+            <option value="Aktif">Aktif</option>
+            <option value="Nonaktif">Nonaktif</option>
+          </select>
+          {error && !formData.brg_status && (
+            <p className="text-red-500 text-xs italic mt-2">Status tidak boleh kosong</p>
+          )}
+        </div>
+
+        <div className="flex justify-center gap-4 mt-8">
+          <button
+            type="button"
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
+            onClick={handleCancel}
+          >
+            Batal
+          </button>
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-6 rounded-lg text-lg mx-3"
+            className="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
           >
             Submit
           </button>

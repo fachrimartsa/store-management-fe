@@ -1,206 +1,247 @@
-import React, { useEffect, useState } from 'react';
-import { Line, Bar } from 'react-chartjs-2';
-import UseFetch from "../util/UseFetch";
+import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { API_LINK } from '../util/Constants';
+} from "chart.js";
+import { API_LINK } from "../util/Constants";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
   Title,
   Tooltip,
   Legend
 );
 
 export default function Dashboard() {
-  const [transactionDay, setTransactionDay] = useState("");
-  const [transactionMonth, setTransactionMonth] = useState([]);
-  const [lineTransaction, setLineTransaction] = useState([]);
-  const [lineIncome, setLineIncome] = useState([]);
-  const [incomeDay, setIncomeDay] = useState("");
-  const [incomeMonth, setIncomeMonth] = useState([]);
+  const [totalStok, setTotalStok] = useState(0);
+  const [totalSupplier, setTotalSupplier] = useState(0);
+  const [penjualanMonth, setPenjualanMonth] = useState(0);
+  const [pengeluaranMonth, setPengeluaranMonth] = useState(0);
+  const [pembelianMonth, setPembelianMonth] = useState(0);
+  const [profitMonth, setProfitMonth] = useState(0);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchTransactionDay = async () => {
+  const fetchTotalStok = async () => {
     setIsError(false);
     try {
-      const data = await UseFetch(API_LINK + "Dashboard/transactionDay.php", {}, "GET");
-      if (data === "ERROR") {
-        setIsError(true);
-      } else if (data.length === 0) {
-        setTransactionDay(0);
-      } else {
-        setTransactionDay(data.total_transaksi);
-      }
-    } catch {
+      const response = await fetch(API_LINK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              getTotalStok
+            }
+          `,
+        }),
+      });
+
+      const resultJson = await response.json();
+      setTotalStok(resultJson.data.getTotalStok);
+    } catch (err) {
       setIsError(true);
+      setTotalStok(0);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchTransactionMonth = async () => {
+  const fetchTotalSupplier = async () => {
     setIsError(false);
     try {
-      const data = await UseFetch(API_LINK + "Dashboard/transactionMonth.php", {}, "GET");
-      if (data === "ERROR") {
-        setIsError(true);
-      } else if (data.length === 0) {
-        setTransactionMonth(0);
-      } else {
-        const currentMonth = new Date().getMonth(); // Mendapatkan bulan saat ini (0-11)
-        const currentData = data.find(item => new Date(Date.parse(item.bulan + " 1, 2025")).getMonth() === currentMonth);
-        setLineTransaction(data);
-        if (currentData) {
-          setTransactionMonth(currentData.total_transaksi);
-        } else {
-          setTransactionMonth(0);
-        }
-      }
-    } catch {
+      const response = await fetch(API_LINK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              getTotalSupplier
+            }
+          `,
+        }),
+      });
+
+      const resultJson = await response.json();
+      setTotalSupplier(resultJson.data.getTotalSupplier);
+    } catch (err) {
       setIsError(true);
+      setTotalSupplier(0);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchIncomeDay = async () => {
+  const fetchPenjualanMonth = async () => {
     setIsError(false);
     try {
-      const data = await UseFetch(API_LINK + "Dashboard/incomeDay.php", {}, "GET");
-      if (data === "ERROR") {
-        setIsError(true);
-      } else if (data.length === 0) {
-        setIncomeDay(0);
-      } else {
-        setIncomeDay(data.total_pemasukan);
-      }
-    } catch {
+      const response = await fetch(API_LINK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              getPenjualanMonth
+            }
+          `,
+        }),
+      });
+
+      const resultJson = await response.json();
+      setPenjualanMonth(resultJson.data.getPenjualanMonth);
+    } catch (err) {
       setIsError(true);
+      setPenjualanMonth(0);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchIncomeMonth = async () => {
+  const fetchPengeluaranMonth = async () => {
     setIsError(false);
     try {
-      const data = await UseFetch(API_LINK + "Dashboard/incomeMonth.php", {}, "GET");
-      if (data === "ERROR") {
-        setIsError(true);
-      } else if (data.length === 0) {
-        setIncomeMonth(0);
-      } else {
-        const currentMonth = new Date().getMonth(); // Mendapatkan bulan saat ini (0-11)
-        const currentData = data.find(item => new Date(Date.parse(item.bulan + " 1, 2025")).getMonth() === currentMonth);
-        setLineIncome(data);
-        if (currentData) {
-          setIncomeMonth(currentData.total_pemasukan);
-        } else {
-          setIncomeMonth(0);
-        }
-      }
-    } catch {
+      const response = await fetch(API_LINK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              getPengeluaranMonth
+            }
+          `,
+        }),
+      });
+
+      const resultJson = await response.json();
+      setPengeluaranMonth(resultJson.data.getPengeluaranMonth);
+    } catch (err) {
       setIsError(true);
+      setPengeluaranMonth(0);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Format incomeDay as currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 2
-    }).format(amount);
+  const fetchProfitMonth = async () => {
+    setIsError(false);
+    try {
+      const response = await fetch(API_LINK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              getProfitMonth
+            }
+          `,
+        }),
+      });
+
+      const resultJson = await response.json();
+      setProfitMonth(resultJson.data.getProfitMonth);
+    } catch (err) {
+      setIsError(true);
+      setProfitMonth(0);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchPembelianMonth = async () => {
+    setIsError(false);
+    try {
+      const response = await fetch(API_LINK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query {
+              getPembelianMonth
+            }
+          `,
+        }),
+      });
+
+      const resultJson = await response.json();
+      setPembelianMonth(resultJson.data.getPembelianMonth);
+    } catch (err) {
+      setIsError(true);
+      setPembelianMonth(0);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchTransactionDay();
-    fetchTransactionMonth();
-    fetchIncomeDay();
-    fetchIncomeMonth();
+    fetchTotalStok();
+    fetchTotalSupplier();
+    fetchPenjualanMonth();
+    fetchPengeluaranMonth();
+    fetchPembelianMonth();
+    fetchProfitMonth();
   }, []);
 
-  const dataLine = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Des'],
+  const stats = [
+    { label: "Total Barang", value: totalStok, icon: "fas fa-boxes" },
+    { label: "Total Supplier", value: totalSupplier, icon: "fas fa-users" },
+    { label: "Penjualan Bulan Ini", value: `Rp. ${penjualanMonth.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: "fas fa-cash-register" },
+    { label: "Pembelian Bulan Ini", value: `Rp. ${pembelianMonth.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,  icon: "fas fa-shopping-cart" },
+    { label: "Pengeluaran Bulan Ini", value: `Rp. ${pengeluaranMonth.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,  icon: "fas fa-hand-holding-usd" },
+    { label: "Profit Bulan Ini", value: `Rp. ${profitMonth.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: "fa fa-dollar" },
+  ];
+
+  const salesData = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
     datasets: [
       {
-        label: 'Value',
-        data:  lineTransaction.map(item => item.total_transaksi),
-        fill: false,
-        borderColor: 'rgba(75, 192, 192, 1)',
-        tension: 0.1,
-      },
-    ],
-  };
-  
-  const dataBar = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Des'],
-    datasets: [
-      {
-        label: 'UV',
-        data: lineIncome.map(item => item.total_pemasukan),
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        label: "Penjualan (Juta IDR)",
+        data: [120, 135, 110, 160, 145, 170, 155],
+        backgroundColor: "rgba(59, 130, 246, 0.6)",
+        borderColor: "rgba(59, 130, 246, 1)",
         borderWidth: 1,
       },
     ],
   };
 
-  function Card({ title, value, color }) {
-    return (
-      <div className={`p-6 ${color} text-white rounded-lg shadow-md text-center`}>
-        <h3 className="text-lg font-medium">{title}</h3>
-        <p className="text-2xl font-bold mt-2">{value}</p>
-      </div>
-    );
-  }
-  
-  function ChartCard({ title, children }) {
-    return (
-      <div className="bg-gray-100 p-6 rounded-lg shadow-lg">
-        <h3 className="text-xl font-medium text-gray-700 mb-4">{title}</h3>
-        <div style={{ height: '300px' }}>{children}</div>
-      </div>
-    );
-  }
+  const salesOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Performa Penjualan 7 Bulan Terakhir",
+      },
+    },
+  };
 
   return (
-    <div className="min-h-screen bg-white p-10">
-      <h2 className="text-4xl font-semibold text-center text-blue-900 mb-8">Dashboard MJL</h2>
+    <div className="min-h-screen bg-gray-100 p-6 sm:p-10"> {/* Padding dikembalikan di sini */}
+      <h2 className="text-4xl font-extrabold text-gray-800 mb-8 text-center sm:text-left">Dashboard Overview</h2>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <Card title="Pemasukan Hari Ini" value={formatCurrency(incomeDay)} color="bg-green-500" />
-        <Card title="Pelanggan Hari Ini" value={transactionDay} color="bg-blue-500" />
-        <Card title="Total Servis Bulan Ini" value={transactionMonth} color="bg-yellow-500" />
-        <Card title="Total Pendapatan Bulan Ini" value={formatCurrency(incomeMonth)} color="bg-purple-500" />
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <ChartCard title="Servis Per Bulan">
-          <Line data={dataLine} />
-        </ChartCard>
-        <ChartCard title="Pemasukan Per Bulan">
-          <Bar data={dataBar} />
-        </ChartCard>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 items-stretch">
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-lg shadow-md p-6 flex items-center space-x-4 transform transition duration-300 hover:scale-105 hover:shadow-xl"
+          >
+            <div className="flex-shrink-0">
+              <i className={`${stat.icon} text-5xl text-blue-600`}></i>
+            </div>
+            <div>
+              <p className="text-gray-500 text-lg font-medium">{stat.label}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

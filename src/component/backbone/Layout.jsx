@@ -12,41 +12,26 @@ const Layout = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Header */}
+    <div className="h-screen overflow-hidden relative">
       <Header toggleSidebar={toggleSidebar} usr_name={usr_name} />
-
-      {/* Konten utama dan sidebar */}
-      <div className="flex flex-grow">
-        {/* Sidebar */}
-        {isSidebarOpen && (
-          <div className="lg:fixed lg:left-0 lg:-mt-16 md:h-full lg:w-auto lg:bg-gray-100 lg:shadow-md z-10">
-            <div
-              className={`fixed lg:relative lg:translate-x-0 top-0 left-0 h-full w-auto bg-gray-100 shadow-md transition-all duration-300 z-20 ${
-                isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-              }`}
-            >
-              <Sidebar />
-            </div>
-
-            {/* Overlay hanya muncul di layar kecil */}
-            <div
-              className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-10 lg:hidden"
-              onClick={toggleSidebar}
-            />
-          </div>
-        )}
-
-        {/* Konten Utama */}
-        <div
-          className={`flex-grow p-4 transition-all duration-300 ${
-            isSidebarOpen ? "lg:ml-56" : "lg:ml-0"
-          }`}
-        >
-          {/* Menampilkan konten berdasarkan route */}
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <div
+        className={`
+          absolute top-16 bottom-0 right-0 overflow-y-auto bg-gray-100
+          left-0 lg:left-64
+        `}
+      >
+        <main className="p-4"> 
           <Outlet />
-        </div>
+        </main>
       </div>
+
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
     </div>
   );
 };
