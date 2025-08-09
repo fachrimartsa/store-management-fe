@@ -19,7 +19,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login/>} />
+        <Route path="/store-management-fe" element={<Login/>} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Layout />}>
