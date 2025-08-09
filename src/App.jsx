@@ -22,7 +22,7 @@ function App() {
         <Route path="/store-management-fe" element={<Login/>} />
 
         <Route path="/login" element={<Login />} />
-        <Route path="/store-management-fe" element={<Layout />}>
+        <Route path="/" element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
 
           <Route path="data-supplier" element={<Supplier />} />
