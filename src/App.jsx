@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./component/pages/Login";  
+import Login from "./component/pages/Login";
 import Dashboard from "./component/pages/Dashboard";
 import Layout from "./component/backbone/Layout";
 import Supplier from "./component/pages/master-supplier/Index.jsx"
@@ -17,12 +17,14 @@ import CreatePenjualan from "./component/pages/transaksi-penjualan/Create.jsx"
 
 function App() {
   return (
-    <Router>
+    <Router basename="/store-management-fe">
       <Routes>
-        <Route path="/store-management-fe" element={<Login/>} />
-
+        {/* Rute untuk halaman login */}
         <Route path="/login" element={<Login />} />
+
+        {/* Semua rute yang menggunakan Layout */}
         <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<Dashboard />} />
 
           <Route path="data-supplier" element={<Supplier />} />
@@ -32,7 +34,7 @@ function App() {
           <Route path="data-barang" element={<Barang />}/>
           <Route path="data-barang/create" element={<CreateBarang />}/>
           <Route path="data-barang/update" element={<UpdateBarang />}/>
-          
+
           <Route path="transaksi-pengeluaran" element={<Pengeluaran />}/>
           <Route path="transaksi-pengeluaran/create" element={<CreatePengeluaran />}/>
 
@@ -42,6 +44,8 @@ function App() {
           <Route path="transaksi-penjualan" element={<Penjualan />}/>
           <Route path="transaksi-penjualan/create" element={<CreatePenjualan />}/>
         </Route>
+        {/* Jika ada rute yang tidak ditemukan, bisa ditambahkan halaman 404 di sini */}
+        <Route path="*" element={<p>404 Not Found</p>} />
       </Routes>
     </Router>
   );

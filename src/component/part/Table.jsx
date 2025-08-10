@@ -20,23 +20,21 @@ export default function Table({
   function generateActionButton(columnName, value, id, status) {
     if (columnName !== "Aksi") return value;
 
-    // Mapping untuk nama ikon dan warna tombol agar sesuai tema
     const actionMap = {
       Toggle: status === "Aktif" ? { name: "toggle-on", color: "bg-purple-600" } : { name: "toggle-off", color: "bg-gray-500" },
       Cancel: { name: "delete-document", color: "bg-red-600" },
       Delete: { name: "trash", color: "bg-red-700" },
-      Detail: { name: "eye", color: "bg-gray-600" }, // Warna abu-abu netral
-      Edit: { name: "edit", color: "bg-purple-600" }, // Warna ungu sebagai warna aksi utama
-      Approve: { name: "check", color: "bg-green-600" }, // Hijau untuk persetujuan tetap umum
+      Detail: { name: "eye", color: "bg-gray-600" },
+      Edit: { name: "edit", color: "bg-purple-600" },
+      Approve: { name: "check", color: "bg-green-600" },
       Reject: { name: "cross", color: "bg-red-700" },
-      Sent: { name: "paper-plane", color: "bg-fuchsia-600" }, // Warna fuchsia/magenta
+      Sent: { name: "paper-plane", color: "bg-fuchsia-600" },
       Upload: { name: "file-upload", color: "bg-purple-500" },
-      Final: { name: "gavel", color: "bg-yellow-600" }, // Kuning gelap untuk finalisasi
+      Final: { name: "gavel", color: "bg-yellow-600" },
       Print: { name: "print", color: "bg-gray-500" },
       Download: { name: "download", color: "bg-gray-400" },
     };
 
-    // Mapping fungsi onClick secara eksplisit (menggantikan eval)
     const handleActionClick = (actionType, itemId) => {
       switch (actionType) {
         case "Toggle": return onToggle(itemId);
@@ -64,7 +62,7 @@ export default function Table({
               <button
                 key={id + action + index}
                 className={`p-2.5 rounded-md text-white shadow-md hover:shadow-lg hover:opacity-90 transition duration-200 ${color} flex items-center justify-center`}
-                onClick={() => handleActionClick(action, id)} // Panggil fungsi yang sesuai
+                onClick={() => handleActionClick(action, id)}
               >
                 <Icon name={name} type="Bold" size={18} />
               </button>
@@ -75,7 +73,7 @@ export default function Table({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-700 shadow-md bg-white">
+    <div className="overflow-x-auto rounded-lg border border-gray-700 shadow-md bg-white">
       <table className="w-full text-sm text-left border-collapse">
         <thead className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
           <tr>
@@ -83,7 +81,7 @@ export default function Table({
               Object.keys(data[0] || {}).map(
                 (value, index) =>
                   !["Key", "Count", "Alignment", "Key2"].includes(value) && (
-                    <th key={index} className="px-6 py-3 text-center font-semibold uppercase tracking-wide">
+                    <th key={index} className="px-6 py-3 text-center font-semibold uppercase tracking-wide whitespace-nowrap">
                       {value}
                     </th>
                   )
@@ -99,7 +97,7 @@ export default function Table({
                     !["Key", "Count", "Alignment", "Key2"].includes(column) && (
                       <td
                         key={column}
-                        className={`px-2 py-2 text-sm text-gray-800 ${row.Alignment && row.Alignment[Object.keys(row).indexOf(column)] ? `text-${row.Alignment[Object.keys(row).indexOf(column)]}` : 'text-center'}`}
+                        className={`px-2 py-2 text-sm text-gray-800 whitespace-nowrap ${row.Alignment && row.Alignment[Object.keys(row).indexOf(column)] ? `text-${row.Alignment[Object.keys(row).indexOf(column)]}` : 'text-center'}`}
                       >
                         {generateActionButton(column, row[column], row.Key, row.Status)}
                       </td>
