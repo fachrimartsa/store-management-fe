@@ -1,34 +1,58 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import swal from 'sweetalert';
+import SweetAlert from '../util/SweetAlert';
+import { API_LINK } from '../util/Constants';
+import Cookies from 'js-cookie';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (username === "admin" && password === "password") {
-      swal({
-        title: "Login Berhasil!",
-        text: "Mengalihkan ke dashboard...",
-        icon: "success",
-        timer: 1500,
-        buttons: false
+    try {
+      const query = `
+        mutation LoginUser($usr_username: String!, $usr_password: String!) {
+          loginUser(usr_username: $usr_username, usr_password: $usr_password) {
+            usr_id
+            usr_toko
+            usr_username
+          }
+        }
+      `;
+
+      const variables = {
+        usr_username: username,
+        usr_password: password,
+      };
+
+      const response = await fetch(API_LINK, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
       });
 
-      setTimeout(() => {
+      const result = await response.json();
+      const loggedInUser = result.data.loginUser;
+
+      if (!loggedInUser) {
+        SweetAlert("Login Gagal!", "Username atau password salah!", "error");
+      } else {
+        Cookies.set('user', JSON.stringify(loggedInUser), { expires: 7 });
+        SweetAlert("Sukses!", "Login Berhasil!", "success");
+        setUsername("");
+        setPassword("");
         navigate("/dashboard");
-      }, 1500);
-    } else {
-      swal({
-        title: "Login Gagal",
-        text: "Username atau password salah!",
-        icon: "error",
-        button: "Coba Lagi"
-      });
+      }
+    } catch (err) {
+      SweetAlert("Login Gagal!", "Username atau password salah!", "error");
     }
   };
 
@@ -49,7 +73,6 @@ export default function Login() {
               required
             />
           </div>
-
           <div className="mb-6">
             <label htmlFor="password" className="block text-lg font-medium text-gray-700 mb-2">Password</label>
             <input
@@ -62,7 +85,6 @@ export default function Login() {
               required
             />
           </div>
-
           <button
             type="submit"
             className="w-full py-3 bg-purple-700 text-white font-semibold rounded-md shadow-md hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"

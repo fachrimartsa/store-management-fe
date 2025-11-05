@@ -3,6 +3,7 @@ import Input from "../../part/Input";
 import { API_LINK } from "../../util/Constants";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import swal from "sweetalert";
+import Cookies from 'js-cookie';
 
 export default function UpdateSupplier() {
   const navigate = useNavigate();
@@ -90,6 +91,13 @@ export default function UpdateSupplier() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const userCookieString = Cookies.get('user');
+    if (!userCookieString) {
+      throw new Error("User cookie not found");
+    }
+    const cookie = JSON.parse(userCookieString);
+    const sp_idUser = parseInt(cookie.usr_id);
+
     if (!formData.sp_nama || !formData.sp_contact || !formData.sp_kategori || !formData.sp_alamat) {
       setError("Semua field wajib diisi.");
       return;
@@ -99,8 +107,8 @@ export default function UpdateSupplier() {
 
     try {
       const query = `
-        mutation UpdateSupplier($sp_id: ID!, $sp_nama: String, $sp_contact: String, $sp_kategori: String, $sp_alamat: String) {
-          updateSupplier(sp_id: $sp_id, sp_nama: $sp_nama, sp_contact: $sp_contact, sp_kategori: $sp_kategori, sp_alamat: $sp_alamat) {
+        mutation UpdateSupplier($sp_id: ID!, $sp_nama: String, $sp_contact: String, $sp_kategori: String, $sp_alamat: String, $sp_idUser: Int) {
+          updateSupplier(sp_id: $sp_id, sp_nama: $sp_nama, sp_contact: $sp_contact, sp_kategori: $sp_kategori, sp_alamat: $sp_alamat, sp_idUser: $sp_idUser) {
             sp_id
             sp_nama
           }
@@ -113,6 +121,7 @@ export default function UpdateSupplier() {
         sp_contact: formData.sp_contact,
         sp_kategori: formData.sp_kategori,
         sp_alamat: formData.sp_alamat,
+        sp_idUser: sp_idUser
       };
 
       const response = await fetch(API_LINK, {

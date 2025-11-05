@@ -4,6 +4,7 @@ import UseFetch from "../../util/UseFetch";
 import { API_LINK } from "../../util/Constants";
 import { useNavigate } from "react-router-dom";
 import swal from "sweetalert";
+import Cookies from 'js-cookie';
 
 export default function CreateSupplier() {
   const navigate = useNavigate();
@@ -27,6 +28,13 @@ export default function CreateSupplier() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const userCookieString = Cookies.get('user');
+    if (!userCookieString) {
+      throw new Error("User cookie not found");
+    }
+    const cookie = JSON.parse(userCookieString);
+    const sp_idUser = parseInt(cookie.usr_id);
+
     if (!formData.sp_nama || !formData.sp_contact || !formData.sp_kategori || !formData.sp_alamat) {
       setError("Semua field wajib diisi.");
       return;
@@ -36,8 +44,8 @@ export default function CreateSupplier() {
 
     try {
       const query = `
-        mutation CreateSupplier($sp_nama: String!, $sp_contact: String!, $sp_kategori: String!, $sp_alamat: String!) {
-          createSupplier(sp_nama: $sp_nama, sp_contact: $sp_contact, sp_kategori: $sp_kategori, sp_alamat: $sp_alamat) {
+        mutation CreateSupplier($sp_nama: String!, $sp_contact: String!, $sp_kategori: String!, $sp_alamat: String!, $sp_idUser: Int!) {
+          createSupplier(sp_nama: $sp_nama, sp_contact: $sp_contact, sp_kategori: $sp_kategori, sp_alamat: $sp_alamat, sp_idUser: $sp_idUser) {
             sp_id
             sp_nama
           }
@@ -49,6 +57,7 @@ export default function CreateSupplier() {
         sp_contact: formData.sp_contact,
         sp_kategori: formData.sp_kategori,
         sp_alamat: formData.sp_alamat,
+        sp_idUser: sp_idUser
       };
 
       const response = await fetch(API_LINK, {

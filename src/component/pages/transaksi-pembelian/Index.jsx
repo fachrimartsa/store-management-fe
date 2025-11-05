@@ -4,6 +4,7 @@ import Table from "../../part/Table";
 import { API_LINK } from "../../util/Constants";
 import SweetAlert from "../../util/SweetAlert";
 import * as XLSX from "xlsx";
+import Cookies from 'js-cookie';
 
 const inisialisasiData = [
   {
@@ -13,7 +14,6 @@ const inisialisasiData = [
     "Nama Barang": null,
     Supplier: null,
     Jumlah: null,
-    Alamat: null,
     "Harga Beli": null,
     Total: null,
     Aksi: [null],
@@ -76,25 +76,35 @@ export default function IndexPage() {
 
   const fetchData = async () => {
     setIsError(false);
+
+    const userCookieString = Cookies.get('user');
+    if (!userCookieString) {
+      throw new Error("User cookie not found");
+    }
+    const cookie = JSON.parse(userCookieString);
+    const pbl_idUser = parseInt(cookie.usr_id);
+
     try {
       const response = await fetch(API_LINK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
-            query {
-              getAllPembelian {
+            query getAllPembelian($pbl_idUser: Int!) {
+              getAllPembelian(pbl_idUser: $pbl_idUser) {
                 pbl_id
                 pbl_tanggal
                 brg_nama
                 sp_nama
                 pbl_jumlah
-                pbl_alamat
                 pbl_harga_beli
                 pbl_total
               }
             }
           `,
+          variables: {
+            pbl_idUser: pbl_idUser
+          },
         }),
       });
 
@@ -111,7 +121,6 @@ export default function IndexPage() {
           "Nama Barang": value.brg_nama,
           Supplier: value.sp_nama,
           Jumlah: value.pbl_jumlah,
-          Alamat: value.pbl_alamat,
           "Harga Beli": formatRupiah(value.pbl_harga_beli),
           Total: formatRupiah(value.pbl_total),
           Aksi: ["Delete"],

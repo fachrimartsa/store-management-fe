@@ -4,10 +4,17 @@ import Autocomplete from "../../part/Autocomplete";
 import { API_LINK } from "../../util/Constants";
 import { useNavigate } from "react-router-dom";
 import SweetAlert from "../../util/SweetAlert";
+import Cookies from 'js-cookie';
 
 export default function Create() {
   const navigate = useNavigate();
   const autocompleteRef = useRef(null);
+  const userCookieString = Cookies.get('user');
+  if (!userCookieString) {
+    throw new Error("User cookie not found");
+  }
+  const cookie = JSON.parse(userCookieString);
+  const idUser = parseInt(cookie.usr_id);
 
   const [formData, setFormData] = useState({
     pbl_tanggal: "",
@@ -15,7 +22,6 @@ export default function Create() {
     pbl_barang_nama: "",
     pbl_supplier: "",
     pbl_jumlah: "",
-    pbl_alamat: "",
     pbl_harga_beli: "",
     pbl_total: "",
   });
@@ -73,6 +79,7 @@ export default function Create() {
   }, [formData.pbl_harga_beli, formData.pbl_jumlah, formData.pbl_total]);
 
   const fetchBarangOptions = async (query) => {
+
     try {
       const response = await fetch(API_LINK, {
         method: 'POST',
@@ -81,14 +88,17 @@ export default function Create() {
         },
         body: JSON.stringify({
           query: `
-            query {
-              getAllBarang {
+            query getAllBarang($brg_idUser: Int!) {
+              getAllBarang(brg_idUser: $brg_idUser) {
                 brg_id,
                 brg_nama,
                 brg_harga_beli
               }
             }
           `,
+          variables: {
+            brg_idUser: idUser,
+          },
         }),
       });
       const result = await response.json();
@@ -116,14 +126,16 @@ export default function Create() {
         },
         body: JSON.stringify({
           query: `
-            query {
-              getAllSuppliers {
+            query getAllSupplier($sp_idUser: Int!) {
+              getAllSuppliers(sp_idUser: $sp_idUser) {
                 sp_id,
                 sp_nama,
-                sp_alamat
               }
             }
           `,
+          variables: {
+            sp_idUser: idUser,
+          },
         }),
       });
       const result = await response.json();
@@ -155,7 +167,6 @@ export default function Create() {
     setFormData((prev) => ({
       ...prev,
       pbl_supplier: selectedItem.sp_id,
-      pbl_alamat: selectedItem.sp_alamat
     }));
   };
 
@@ -175,7 +186,6 @@ export default function Create() {
       !formData.pbl_barang ||
       !formData.pbl_supplier ||
       !formData.pbl_jumlah ||
-      !formData.pbl_alamat ||
       !formData.pbl_harga_beli ||
       !formData.pbl_total
     ) {
@@ -197,18 +207,18 @@ export default function Create() {
           $pbl_barang: Int!,
           $pbl_supplier: Int!,
           $pbl_jumlah: Int!,
-          $pbl_alamat: String!,
           $pbl_harga_beli: Float!,
-          $pbl_total: Float!
+          $pbl_total: Float!,
+          $pbl_idUser: Int!
         ) {
           createPembelian(
             pbl_tanggal: $pbl_tanggal,
             pbl_barang: $pbl_barang,
             pbl_supplier: $pbl_supplier,
             pbl_jumlah: $pbl_jumlah,
-            pbl_alamat: $pbl_alamat,
             pbl_harga_beli: $pbl_harga_beli,
-            pbl_total: $pbl_total
+            pbl_total: $pbl_total,
+            pbl_idUser: $pbl_idUser,
           ) {
             pbl_id
             pbl_tanggal
@@ -222,9 +232,9 @@ export default function Create() {
         pbl_barang: parseInt(formData.pbl_barang),
         pbl_supplier: parseInt(formData.pbl_supplier),
         pbl_jumlah: jumlahParsed,
-        pbl_alamat: formData.pbl_alamat,
         pbl_harga_beli: hargaBeliParsed,
         pbl_total: totalParsed,
+        pbl_idUser: idUser
       };
 
       const response = await fetch(API_LINK, {
@@ -251,7 +261,6 @@ export default function Create() {
         pbl_barang_nama: "",
         pbl_supplier: "",
         pbl_jumlah: "",
-        pbl_alamat: "",
         pbl_harga_beli: "",
         pbl_total: "",
       });
@@ -260,7 +269,6 @@ export default function Create() {
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       setFormData((prev) => ({ ...prev, pbl_tanggal: `${yyyy}-${mm}-${dd}` }));
-      autocompleteRef.current?.resetInput();
       navigate("/transaksi-pembelian");
     } catch (err) {
       console.error("Error creating pembelian:", err);
@@ -323,18 +331,6 @@ export default function Create() {
           onChange={handleChange}
           isRequired={true}
           errorMessage={error && !formData.pbl_jumlah ? "Jumlah tidak boleh kosong" : ""}
-        />
-
-        <Input
-          label="Alamat Pengiriman"
-          forInput="pbl_alamat"
-          type="text"
-          name="pbl_alamat"
-          placeholder="Masukkan Alamat Pengiriman"
-          value={formData.pbl_alamat}
-          onChange={handleChange}
-          isRequired={true}
-          errorMessage={error && !formData.pbl_alamat ? "Alamat tidak boleh kosong" : ""}
         />
 
         <Input

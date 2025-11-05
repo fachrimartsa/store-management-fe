@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Table from "../../part/Table";
 import { API_LINK } from "../../util/Constants";
 import SweetAlert from "../../util/SweetAlert";
+import Cookies from 'js-cookie';
 
 const inisialisasiData = [
   {
@@ -67,14 +68,22 @@ export default function IndexPage() {
 
   const fetchData = async () => {
     setIsError(false);
+
+    const userCookieString = Cookies.get('user');
+    if (!userCookieString) {
+      throw new Error("User cookie not found");
+    }
+    const cookie = JSON.parse(userCookieString);
+    const sp_idUser = parseInt(cookie.usr_id);
+
     try {
       const response = await fetch(API_LINK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
-            query {
-              getAllSuppliers {
+            query getAllSuppliers($sp_idUser: Int!) {
+              getAllSuppliers(sp_idUser: $sp_idUser) {
                 sp_id,
                 sp_nama,
                 sp_contact,
@@ -83,6 +92,9 @@ export default function IndexPage() {
               }
             }
           `,
+          variables: {
+            sp_idUser: sp_idUser,
+          },
         }),
       });
 

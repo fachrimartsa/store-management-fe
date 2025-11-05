@@ -3,9 +3,16 @@ import Input from "../../part/Input";
 import { API_LINK } from "../../util/Constants";
 import { useNavigate } from "react-router-dom";
 import SweetAlert from "../../util/SweetAlert";
+import Cookies from 'js-cookie';
 
 export default function Create() {
   const navigate = useNavigate();
+  const userCookieString = Cookies.get('user');
+  if (!userCookieString) {
+    throw new Error("User cookie not found");
+  }
+  const cookie = JSON.parse(userCookieString);
+  const idUser = parseInt(cookie.usr_id);
   const [formData, setFormData] = useState({
     pgl_tanggal: "",
     pgl_barang: "",
@@ -79,13 +86,15 @@ export default function Create() {
           $pgl_tanggal: String!,
           $pgl_barang: String!,
           $pgl_jumlah: Int!,
-          $pgl_total: Float!
+          $pgl_total: Float!,
+          $pgl_idUser: Int!
         ) {
           createPengeluaran(
             pgl_tanggal: $pgl_tanggal,
             pgl_barang: $pgl_barang,
             pgl_jumlah: $pgl_jumlah,
-            pgl_total: $pgl_total
+            pgl_total: $pgl_total,
+            pgl_idUser: $pgl_idUser
           ) {
             pgl_id
             pgl_barang
@@ -98,6 +107,7 @@ export default function Create() {
         pgl_barang: formData.pgl_barang,
         pgl_jumlah: jumlahParsed,
         pgl_total: totalParsed,
+        pgl_idUser: idUser
       };
 
       const response = await fetch(API_LINK, {

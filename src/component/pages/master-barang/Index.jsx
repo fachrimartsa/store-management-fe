@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Table from "../../part/Table";
 import { API_LINK } from "../../util/Constants";
 import SweetAlert from "../../util/SweetAlert";
+import Cookies from 'js-cookie';
 
 const inisialisasiData = [
   {
@@ -11,14 +12,13 @@ const inisialisasiData = [
     "Nama Barang": null,
     "Kategori": null,
     "Harga Beli": null,
-    "Harga Jual": null,
     Stok: null,
     Status: null,
     Aksi: [null],
   },
 ];
 
-export default function IndexPage() {
+export default function App() {
   const navigate = useNavigate();
   const [currentData, setCurrentData] = useState(inisialisasiData);
   const [isError, setIsError] = useState(false);
@@ -79,23 +79,32 @@ export default function IndexPage() {
   const fetchData = async () => {
     setIsError(false);
     try {
+      const userCookieString = Cookies.get('user');
+      if (!userCookieString) {
+        throw new Error("User cookie not found");
+      }
+      const cookie = JSON.parse(userCookieString);
+      const brg_idUser = parseInt(cookie.usr_id);
+
       const response = await fetch(API_LINK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
-            query {
-              getAllBarang {
+            query getAllBarang($brg_idUser: Int!) {
+              getAllBarang(brg_idUser: $brg_idUser) {
                 brg_id,
                 brg_nama,
                 brg_kategori,
                 brg_harga_beli,
-                brg_harga_jual,
                 brg_stok,
                 brg_status
               }
             }
           `,
+          variables: {
+            brg_idUser: brg_idUser,
+          },
         }),
       });
 
@@ -110,7 +119,6 @@ export default function IndexPage() {
           "Nama Barang": value.brg_nama,
           "Kategori": value.brg_kategori,
           "Harga Beli": formatRupiah(value.brg_harga_beli),
-          "Harga Jual": formatRupiah(value.brg_harga_jual),
           Stok: value.brg_stok,
           Status: value.brg_status,
           Aksi: ["Edit", "Delete"],

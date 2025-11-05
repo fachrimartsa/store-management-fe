@@ -93,6 +93,16 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                   Transaksi Penjualan
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/transaksi-penarikan"
+                  className="flex items-center p-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition duration-200 ease-in-out group"
+                  onClick={toggleSidebar}
+                >
+                  <i className="fas fa-wallet mr-4 text-xl group-hover:text-blue-200"></i>
+                  Transaksi Penarikan
+                </Link>
+              </li>
             </ul>
           </li>
         </ul>

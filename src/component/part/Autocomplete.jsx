@@ -48,7 +48,11 @@ const Autocomplete = forwardRef(
     };
 
     useImperativeHandle(ref, () => ({
-      resetInput: () => setInputValue(""),
+      clear: () => {
+        setInputValue("");
+        setFilteredData([]);
+        setIsDropdownVisible(false);
+      },
     }));
 
     const handleSelect = (item) => {

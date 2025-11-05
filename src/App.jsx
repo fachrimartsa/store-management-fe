@@ -14,6 +14,8 @@ import Pembelian from "./component/pages/transaksi-pembelian/Index.jsx"
 import CreatePembelian from "./component/pages/transaksi-pembelian/Create.jsx"
 import Penjualan from "./component/pages/transaksi-penjualan/Index.jsx"
 import CreatePenjualan from "./component/pages/transaksi-penjualan/Create.jsx"
+import Penarikan from "./component/pages/transaksi-penarikan/Index.jsx"
+import CreatePenarikan from "./component/pages/transaksi-penarikan/Create.jsx"
 
 function App() {
   return (
@@ -24,7 +26,7 @@ function App() {
 
         {/* Semua rute yang menggunakan Layout */}
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="dashboard" />} />
+          <Route index element={<Navigate to="login" />} />
           <Route path="dashboard" element={<Dashboard />} />
 
           <Route path="data-supplier" element={<Supplier />} />
@@ -43,6 +45,9 @@ function App() {
 
           <Route path="transaksi-penjualan" element={<Penjualan />}/>
           <Route path="transaksi-penjualan/create" element={<CreatePenjualan />}/>
+
+          <Route path="transaksi-penarikan" element={<Penarikan />}/>
+          <Route path="transaksi-penarikan/create" element={<CreatePenarikan />}/>
         </Route>
         {/* Jika ada rute yang tidak ditemukan, bisa ditambahkan halaman 404 di sini */}
         <Route path="*" element={<p>404 Not Found</p>} />

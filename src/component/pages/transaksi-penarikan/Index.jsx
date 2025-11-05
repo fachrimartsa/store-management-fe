@@ -11,16 +11,14 @@ const inisialisasiData = [
     Key: null,
     No: null,
     Tanggal: null,
-    Barang: null,
     Jumlah: null,
-    Total: null,
-    Aksi: [null],
   },
 ];
 
 const formatRupiah = (angka) => {
-  if (angka === null || angka === undefined) return "";
-  return `Rp${new Intl.NumberFormat("id-ID").format(angka)}`;
+  if (angka === null || angka === undefined || angka === "") return "";
+  const num = typeof angka === 'string' ? parseFloat(angka) : angka;
+  return `Rp${new Intl.NumberFormat("id-ID").format(num)}`;
 };
 
 export default function IndexPage() {
@@ -30,13 +28,13 @@ export default function IndexPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleClick = () => {
-    navigate("/transaksi-pengeluaran/create");
+    navigate("/transaksi-penarikan/create");
   };
 
-  const handleDelete = async (pgl_id) => {
+  const handleDelete = async (pbl_id) => {
     const result = await SweetAlert(
       "Apakah Anda yakin?",
-      "Data pengeluaran ini akan dihapus secara permanen!",
+      "Data pembelian ini akan dihapus secara permanen!",
       "warning",
       "Hapus"
     );
@@ -48,17 +46,17 @@ export default function IndexPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
-              mutation DeletePengeluaran($pgl_id: ID!) {
-                deletePengeluaran(pgl_id: $pgl_id)
+              mutation DeletePembelian($pbl_id: ID!) {
+                deletePembelian(pbl_id: $pbl_id)
               }
             `,
-            variables: { pgl_id: pgl_id },
+            variables: { pbl_id: pbl_id },
           }),
         });
 
         const resultJson = await response.json();
-        if (resultJson.data?.deletePengeluaran) {
-          SweetAlert("Sukses", "Data pengeluaran berhasil dihapus", "success");
+        if (resultJson.data?.deletePembelian) {
+          SweetAlert("Sukses", "Data berhasil dihapus", "success");
           fetchData();
         } else if (resultJson.errors) {
           SweetAlert("Error", resultJson.errors[0]?.message || "Gagal menghapus data", "error");
@@ -73,56 +71,52 @@ export default function IndexPage() {
 
   const fetchData = async () => {
     setIsError(false);
+
     const userCookieString = Cookies.get('user');
     if (!userCookieString) {
       throw new Error("User cookie not found");
     }
     const cookie = JSON.parse(userCookieString);
-    const idUser = parseInt(cookie.usr_id);
+    const pnr_idUser = parseInt(cookie.usr_id);
+
     try {
       const response = await fetch(API_LINK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
-            query getAllPengeluaran($pgl_idUser: Int!) {
-              getAllPengeluaran(pgl_idUser: $pgl_idUser) {
-                pgl_id
-                pgl_tanggal
-                pgl_barang
-                pgl_jumlah
-                pgl_total
+            query getAllPenarikan($pnr_idUser: Int!) {
+              getAllPenarikan(pnr_idUser: $pnr_idUser) {
+                pnr_id
+                pnr_tanggal
+                pnr_jumlah
               }
             }
           `,
           variables: {
-            pgl_idUser: idUser,
+            pnr_idUser: pnr_idUser
           },
         }),
       });
 
       const resultJson = await response.json();
-      const data = resultJson.data?.getAllPengeluaran;
-
+      const data = resultJson.data?.getAllPenarikan;
+      console.log(data);
       if (!data || data.length === 0) {
         setCurrentData(inisialisasiData);
       } else {
         const formattedData = data.map((value, index) => ({
-          Key: value.pgl_id,
+          Key: value.pnr_id,
           No: index + 1,
-          Tanggal: value.pgl_tanggal,
-          Barang: value.pgl_barang,
-          Jumlah: value.pgl_jumlah,
-          Total: formatRupiah(value.pgl_total),
-          Aksi: ["Delete"],
-          Alignment: ["center", "center", "center", "center", "center", "center"],
+          Tanggal: value.pnr_tanggal,
+          Jumlah: formatRupiah(value.pnr_jumlah),
+          Alignment: ["center", "center", "center"],
         }));
         setCurrentData(formattedData);
       }
     } catch (err) {
       setIsError(true);
       setCurrentData(inisialisasiData);
-      console.error("Error fetching data:", err);
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +127,7 @@ export default function IndexPage() {
   }, []);
 
   const handleCetak = () => {
-    if (!currentData || currentData.length <= 1 && currentData[0].Key === null) { 
+    if (!currentData || (currentData.length === 1 && currentData[0].Key === null)) {
       SweetAlert("Info", "Tidak ada data untuk dicetak!", "info");
       return;
     }
@@ -142,7 +136,7 @@ export default function IndexPage() {
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "DataPengeluaran");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DataPembelian");
 
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
@@ -156,7 +150,7 @@ export default function IndexPage() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "DataPengeluaran.xlsx");
+    link.setAttribute("download", "DataPembelian.xlsx");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -173,13 +167,13 @@ export default function IndexPage() {
   return (
     <div className="p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-semibold text-blue-900">Data Pengeluaran</h1>
+        <h1 className="text-3xl font-semibold text-blue-900">Data Penarikan</h1>
         <div className="flex gap-4">
           <button
             onClick={handleClick}
             className="bg-purple-700 text-white px-4 py-2 rounded-lg shadow-md hover:bg-purple-800 transition duration-300"
           >
-            Tambah Pengeluaran
+            Tambah Penarikan
           </button>
           <button
             onClick={handleCetak}

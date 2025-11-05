@@ -4,17 +4,15 @@ import Table from "../../part/Table";
 import { API_LINK } from "../../util/Constants";
 import SweetAlert from "../../util/SweetAlert";
 import * as XLSX from "xlsx";
+import Cookies from 'js-cookie';
 
 const inisialisasiData = [
   {
     Key: null,
     No: null,
     Tanggal: null,
-    "Nama Barang": null,
-    Jumlah: null,
     Platform: null,
-    Alamat: null,
-    "Harga Jual": null,
+    Telephone: null,
     Total: null,
     Profit: null,
     Aksi: [null],
@@ -79,26 +77,34 @@ export default function Index() {
 
   const fetchData = async () => {
     setIsError(false);
+
+    const userCookieString = Cookies.get('user');
+    if (!userCookieString) {
+      throw new Error("User cookie not found");
+    }
+    const cookie = JSON.parse(userCookieString);
+    const pjl_idUser = parseInt(cookie.usr_id);
+
     try {
       const response = await fetch(API_LINK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
-            query {
-              getAllPenjualan {
+            query getAllPenjualan($pjl_idUser: Int!) {
+              getAllPenjualan(pjl_idUser: $pjl_idUser) {
                 pjl_id
                 pjl_tanggal
-                brg_nama
-                pjl_jumlah
                 pjl_platform
-                pjl_alamat
-                pjl_harga_jual
+                pjl_telephone
                 pjl_total
                 pjl_profit
               }
             }
           `,
+          variables: {
+            pjl_idUser: pjl_idUser,
+          },
         }),
       });
       const resultJson = await response.json();
@@ -110,18 +116,12 @@ export default function Index() {
           Key: value.pjl_id,
           No: index + 1,
           Tanggal: value.pjl_tanggal,
-          "Nama Barang": value.brg_nama,
-          Jumlah: value.pjl_jumlah,
           Platform: value.pjl_platform,
-          Alamat: value.pjl_alamat,
-          "Harga Jual": formatRupiah(value.pjl_harga_jual),
+          Telephone: value.pjl_telephone,
           Total: formatRupiah(value.pjl_total),
           Profit: formatRupiah(value.pjl_profit),
           Aksi: ["Delete"],
           Alignment: [
-            "center",
-            "center",
-            "center",
             "center",
             "center",
             "center",
