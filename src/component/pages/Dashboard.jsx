@@ -41,7 +41,7 @@ export default function Dashboard() {
       setIsLoading(false);
       navigate("/login");
       return;
-    } 
+    }   
 
     const fetchData = async () => {
       try {
