@@ -22,11 +22,11 @@ function App() {
     <Router basename="/store-management-fe">
       <Routes>
         {/* Rute untuk halaman login */}
+        <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
 
         {/* Semua rute yang menggunakan Layout */}
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="login" />} />
           <Route path="dashboard" element={<Dashboard />} />
 
           <Route path="data-supplier" element={<Supplier />} />

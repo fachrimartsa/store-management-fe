@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useNavigate } from "react-router-dom";
 import { API_LINK } from "../util/Constants";
 import Cookies from 'js-cookie';
 
@@ -29,7 +30,7 @@ export default function Dashboard() {
   const [penarikanMonth, setPenarikanMonth] = useState(0);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  const navigate = useNavigate();
   const userCookieString = Cookies.get('user');
   const userCookie = userCookieString ? JSON.parse(userCookieString) : null;
   const idUser = userCookie ? parseInt(userCookie.usr_id) : null;
@@ -38,6 +39,7 @@ export default function Dashboard() {
     if (!idUser) {
       setIsError(true);
       setIsLoading(false);
+      navigate("/login");
       return;
     }
 
